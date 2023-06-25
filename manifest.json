@@ -1,0 +1,11 @@
+{
+  "id": "link-tree",
+  "name": "Link Tree",
+  "version": "0.1.0",
+  "minAppVersion": "0.15.0",
+  "description": "View Obsidian pages like WorkFlowy lists.",
+  "author": "Joshua Reinier",
+  "authorUrl": "https://joshuareinier.com",
+  "fundingUrl": "https://joshuareinier.com",
+  "isDesktopOnly": false
+}

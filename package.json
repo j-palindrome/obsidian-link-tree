@@ -1,0 +1,12 @@
+{
+  "name": "obsidian-foldable-list",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "dev": "cd ../../ && npm run dev:fl"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
+}
