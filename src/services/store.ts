@@ -6,6 +6,7 @@ import invariant from 'tiny-invariant'
 export type State = {
   links: Record<string, Link>
   backlinks: Record<string, Link>
+  search: string
   current?: string
   obsidianAPI?: ObsidianAPI
 }
@@ -20,6 +21,7 @@ export const useStore = create(
     const state: State = {
       links: {},
       backlinks: {},
+      search: '',
     }
     const actions: Actions = {
       setState: (newState) => {

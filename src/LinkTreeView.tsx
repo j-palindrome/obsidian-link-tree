@@ -27,10 +27,7 @@ export default class LinkTreeView extends ItemView {
   }
 
   async onOpen() {
-    console.log(this.containerEl.children)
-
     this.root = createRoot(this.containerEl.children[1])
-    console.log(this.root)
 
     this.root.render(<View />)
   }

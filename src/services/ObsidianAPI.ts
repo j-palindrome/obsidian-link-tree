@@ -21,21 +21,30 @@ export default class ObsidianAPI extends Component {
   }
 
   onload() {
+    let indexReady = { current: false }
+
+    this.registerEvent(
+      // @ts-ignore
+      app.metadataCache.on('dataview:metadata-change', () => {
+        if (!indexReady.current) return
+        this.loadLinks()
+      })
+    )
+
     this.registerEvent(
       // @ts-ignore
       app.metadataCache.on('dataview:index-ready', () => {
+        indexReady.current = true
         this.loadLinks()
       })
     )
 
     this.registerEvent(
       app.workspace.on('active-leaf-change', (leaf) => {
-        console.log('editor changed', leaf?.getViewState())
-        if (leaf?.getViewState()?.type === 'markdown') this.loadLinks()
+        if (leaf?.getViewState()?.type === 'markdown' && indexReady.current)
+          this.loadLinks()
       })
     )
-
-    this.loadLinks()
   }
 
   loadLinks() {
@@ -52,32 +61,34 @@ export default class ObsidianAPI extends Component {
 
     this.loadLink('link', current)
     this.loadLink('backlink', current)
-    this.setState({ current })
+    this.setState({ current, search: '' })
   }
 
   loadLink(type: 'link' | 'backlink', link: string) {
-    console.log('loading children', link)
-
-    const childLinks: string[] = dv
-      .pages(type === 'backlink' ? `[[${link}]]` : `outgoing([[${link}]])`)
-      ['file']['path'].map((link) => link.replace('.md', ''))
-      .filter((childLink) => childLink !== link)
-    const newLinks: Record<string, Link> = {
-      [link]: { children: childLinks },
-    }
-
-    for (let childLink of childLinks) {
-      const pages = dv
-        .pages(
-          type === 'backlink'
-            ? `[[${childLink}]]`
-            : `outgoing([[${childLink}]])`
-        )
+    try {
+      const childLinks: string[] = dv
+        .pages(type === 'backlink' ? `[[${link}]]` : `outgoing([[${link}]])`)
         ['file']['path'].map((link) => link.replace('.md', ''))
-        .filter((subChildLink) => subChildLink !== childLink)
-      newLinks[childLink] = { children: pages }
-    }
+        .filter((childLink) => childLink !== link)
+      const newLinks: Record<string, Link> = {
+        [link]: { children: childLinks },
+      }
 
-    this.setLinks(type, newLinks)
+      for (let childLink of childLinks) {
+        const pages = dv
+          .pages(
+            type === 'backlink'
+              ? `[[${childLink}]]`
+              : `outgoing([[${childLink}]])`
+          )
+          ['file']['path'].map((link) => link.replace('.md', ''))
+          .filter((subChildLink) => subChildLink !== childLink)
+        newLinks[childLink] = { children: pages }
+      }
+
+      this.setLinks(type, newLinks)
+    } catch (err) {
+      return
+    }
   }
 }
