@@ -1,5 +1,7 @@
 Link Tree presents a view of the current note's links and backlinks in a recursively expandable list, similar to outliners like WorkFlowy or Dynalist. 
 
+<img width="390" alt="Screenshot 2023-07-25 at 4 33 40 PM" src="https://github.com/joshuatazrein/obsidian-link-tree/assets/84872947/d9cc31e2-edc5-4f94-bfc7-a79a699d6151">
+
 # Features
 - Click on the bullet point to expand or collapse a node, showing/hiding its forward and backlinks (circular links are filtered out of the hierarchy).
 - Toggle showing forward and back links by clicking the arrow buttons in the top-right
