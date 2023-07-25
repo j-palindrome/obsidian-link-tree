@@ -5,7 +5,7 @@ export default function Search() {
   const search = useStore((state) => state.search)
 
   return (
-    <div className='flex items-center'>
+    <div className='flex w-full items-center'>
       <div className='flex w-6 flex-none justify-center'>
         <Logo src='search' className=' h-3 w-3' />
       </div>

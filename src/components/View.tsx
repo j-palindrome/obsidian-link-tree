@@ -22,11 +22,9 @@ export default function View() {
 
   return (
     <div id='link-tree' style={{ height: '100%', width: '100%' }}>
-      <Search />
-
       {current && currentLink && (
-        <div className='h-full w-full overflow-y-auto'>
-          <div className='my-2 pl-2'>
+        <div className='flex h-full w-full flex-col space-y-2'>
+          <div className='flex-none pl-2'>
             <div
               className='selectable flex flex-wrap items-center space-x-1 rounded-lg'
               onClick={() => {
@@ -47,16 +45,20 @@ export default function View() {
                 )
               })}
             </div>
-            <div className='text-lg font-bold'>
-              {current.includes('/')
-                ? current.slice(current.lastIndexOf('/') + 1)
-                : current}
+            <div className='flex w-full items-center space-x-1'>
+              <div className='w-full text-lg font-bold'>
+                {current.includes('/')
+                  ? current.slice(current.lastIndexOf('/') + 1)
+                  : current}
+              </div>
             </div>
           </div>
-          <div className='flex space-x-2 pb-2'>
+
+          <div className='flex w-full flex-none items-center space-x-1'>
+            <Search />
             <Button
               src='arrow-left'
-              className={`w-1/2 ${
+              className={`w-6 flex-none ${
                 showBack
                   ? 'border border-solid border-faint bg-primary-alt'
                   : ''
@@ -65,7 +67,7 @@ export default function View() {
             />
             <Button
               src='arrow-right'
-              className={`w-1/2 ${
+              className={`w-6 flex-none ${
                 showForward
                   ? 'border border-solid border-faint bg-primary-alt'
                   : ''
@@ -73,21 +75,23 @@ export default function View() {
               onClick={() => setState({ showForward: !showForward })}
             />
           </div>
-          {currentLink.children
-            .filter(
-              ({ forward, back }) =>
-                (forward && showForward) || (back && showBack)
-            )
-            .map(({ link, forward, back }) => (
-              <Link
-                key={link}
-                link={link}
-                forward={forward}
-                back={back}
-                parents={new Set(currentParents)}
-                backlinkTo={current}
-              />
-            ))}
+          <div className='h-0 grow overflow-y-auto overflow-x-hidden'>
+            {currentLink.children
+              .filter(
+                ({ forward, back }) =>
+                  (forward && showForward) || (back && showBack)
+              )
+              .map(({ link, forward, back }) => (
+                <Link
+                  key={link}
+                  link={link}
+                  forward={forward}
+                  back={back}
+                  parents={new Set(currentParents)}
+                  backlinkTo={current}
+                />
+              ))}
+          </div>
         </div>
       )}
     </div>

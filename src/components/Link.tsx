@@ -34,6 +34,13 @@ export default function Link({
   const [collapsed, setCollapsed] = useState(true)
   const [loadedChildren, setLoadedChildren] = useState(false)
 
+  const shownChildren = thisLink?.children.filter(
+    ({ forward, back, link: childLink }) =>
+      ((forward && showForward) || (back && showBack)) &&
+      childLink !== link &&
+      !parents.has(childLink)
+  )
+
   const nodeRef = useRef<HTMLDivElement>(null)
 
   const matchedSearch = useStore(
@@ -106,7 +113,7 @@ export default function Link({
               }}
             >
               <div className='relative h-4 w-4'>
-                {(thisLink?.children.length ?? 0) > 0 && (
+                {shownChildren && shownChildren.length > 0 && (
                   <div
                     className={`absolute left-0 top-0 h-full w-full rounded-full bg-faint transition-opacity duration-300 ${
                       !collapsed ? 'opacity-0' : 'opacity-40'
@@ -177,7 +184,7 @@ export default function Link({
           )}
         </>
       )}
-      {thisLink?.children && loadedChildren && (
+      {shownChildren && shownChildren.length > 0 && loadedChildren && (
         <Transition nodeRef={nodeRef} in={!collapsed} appear timeout={250}>
           {(state) => (
             <div
@@ -190,21 +197,14 @@ export default function Link({
                 ...transitionStyles[state],
               }}
             >
-              {thisLink.children
-                .filter(
-                  ({ forward, back, link: childLink }) =>
-                    ((forward && showForward) || (back && showBack)) &&
-                    childLink !== link &&
-                    !parents.has(childLink)
-                )
-                .map(({ link: childLink, forward, back }) => (
-                  <Link
-                    key={childLink}
-                    {...{ link: childLink, forward, back }}
-                    parents={newParents}
-                    backlinkTo={link}
-                  />
-                ))}
+              {shownChildren.map(({ link: childLink, forward, back }) => (
+                <Link
+                  key={childLink}
+                  {...{ link: childLink, forward, back }}
+                  parents={newParents}
+                  backlinkTo={link}
+                />
+              ))}
             </div>
           )}
         </Transition>
