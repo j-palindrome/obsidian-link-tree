@@ -7,6 +7,6 @@
     "dev": "cd ../../ && npm run dev:fl"
   },
   "keywords": [],
-  "author": "",
+  "author": "Joshua Reinier",
   "license": "ISC"
 }

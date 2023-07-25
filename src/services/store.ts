@@ -1,11 +1,11 @@
 import { create } from 'zustand'
 import { immer } from 'zustand/middleware/immer'
 import ObsidianAPI, { Link } from './ObsidianAPI'
-import invariant from 'tiny-invariant'
 
 export type State = {
   links: Record<string, Link>
-  backlinks: Record<string, Link>
+  showForward: boolean
+  showBack: boolean
   search: string
   current?: string
   obsidianAPI?: ObsidianAPI
@@ -13,15 +13,16 @@ export type State = {
 
 export type Actions = {
   setState: (newState: Partial<State>) => void
-  setLinks: (type: 'link' | 'backlink', links: Record<string, Link>) => void
+  setLinks: (links: Record<string, Link>) => void
 }
 
 export const useStore = create(
   immer<State & Actions>((set) => {
     const state: State = {
       links: {},
-      backlinks: {},
       search: '',
+      showForward: true,
+      showBack: true,
     }
     const actions: Actions = {
       setState: (newState) => {
@@ -31,16 +32,9 @@ export const useStore = create(
           }
         })
       },
-      setLinks: (type, newLinks) => {
+      setLinks: (newLinks) => {
         set((state) => {
-          switch (type) {
-            case 'backlink':
-              state.backlinks = { ...state.backlinks, ...newLinks }
-              break
-            case 'link':
-              state.links = { ...state.links, ...newLinks }
-              break
-          }
+          state.links = { ...state.links, ...newLinks }
         })
       },
     }
@@ -51,3 +45,7 @@ export const useStore = create(
 export const getStore = <T extends keyof (State & Actions)>(
   action: T
 ): (State & Actions)[T] => useStore.getState()[action]
+
+export const getLink = (link: string) => getStore('links')[link]
+
+export const getObsidianAPI = () => getStore('obsidianAPI') as ObsidianAPI

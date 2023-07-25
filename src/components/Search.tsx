@@ -1,5 +1,5 @@
 import { getStore, useStore } from '../services/store'
-import Logo from '../../../../../packages/types/obsidian-components/Logo'
+import Logo from '../../../../../packages/obsidian-components/Logo'
 
 export default function Search() {
   const search = useStore((state) => state.search)

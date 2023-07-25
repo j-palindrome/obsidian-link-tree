@@ -1,13 +1,21 @@
-import { Component, Editor } from 'obsidian'
+import { Component, Editor, TFile } from 'obsidian'
 import { DataviewApi, getAPI } from 'obsidian-dataview'
-import { Actions, State, getStore } from './store'
+import { Actions, State, getLink, getStore } from './store'
 import _ from 'lodash'
 import { link } from 'fs'
 
 let dv: DataviewApi
+
 export type Link = {
-  children: string[]
+  loadedChildren: boolean
+  notes?: { text: string; line: number }[]
+  children: {
+    link: string
+    forward: boolean
+    back: boolean
+  }[]
 }
+
 export default class ObsidianAPI extends Component {
   setState: Actions['setState']
   setLinks: Actions['setLinks']
@@ -45,48 +53,116 @@ export default class ObsidianAPI extends Component {
           this.loadLinks()
       })
     )
+
+    if (dv.index.initialized) {
+      indexReady.current = true
+      this.loadLinks()
+    }
   }
 
   loadLinks() {
     const currentEditor = app.workspace.activeEditor
     if (!currentEditor) {
-      console.log('no current editor')
       return
     }
     const current = currentEditor.file?.path.replace('.md', '')
     if (!current) {
-      console.log('no current file')
       return
     }
 
-    this.loadLink('link', current)
-    this.loadLink('backlink', current)
-    this.setState({ current, search: '' })
+    this.loadLink(current, true)
+    this.loadLinkChildren(current)
+    this.setState({ current })
   }
 
-  loadLink(type: 'link' | 'backlink', link: string) {
+  async loadNotes(link: string) {
+    let thisLink = getLink(link)
+    if (!thisLink) {
+      this.loadLink(link)
+      thisLink = getLink(link)
+      if (!thisLink) {
+        return
+      }
+    }
+
+    const file = app.vault.getAbstractFileByPath(link + '.md')
+    if (!(file instanceof TFile)) return
+    const text = await app.vault.read(file)
+    const paragraphs = text.split('\n')
+
+    const notes: Link['notes'] = []
+    for (let i = 0; i < paragraphs.length; i++) {
+      const paragraph = paragraphs[i]
+      notes.push({
+        text: paragraph,
+        line: i,
+      })
+    }
+    this.setLinks({
+      [link]: {
+        ...thisLink,
+        notes,
+      },
+    })
+  }
+
+  updateText(link: string, note: NonNullable<Link['notes']>[number]) {
+    console.log(note)
+
+    const file = app.vault.getAbstractFileByPath(link + '.md')
+
+    if (!(file instanceof TFile)) return
+    app.vault.process(file, (text) => {
+      const lines = text.split('\n')
+      lines[note.line] = note.text
+      console.log('new line:', lines)
+      return lines.join('\n')
+    })
+  }
+
+  loadLinkChildren(link: string) {
+    let thisLink = getLink(link)
+    if (!thisLink) {
+      this.loadLink(link)
+      thisLink = getLink(link)
+      if (!thisLink) {
+        return
+      }
+    } else if (thisLink.loadedChildren) return
+
+    for (let child of thisLink.children) {
+      this.loadLink(child.link)
+    }
+    this.setLinks({ [link]: { ...thisLink, loadedChildren: true } })
+  }
+
+  loadLink(link: string, force = false) {
     try {
-      const childLinks: string[] = dv
-        .pages(type === 'backlink' ? `[[${link}]]` : `outgoing([[${link}]])`)
+      if (!force) {
+        const alreadyGotLink = getLink(link)
+        if (alreadyGotLink) return
+      }
+
+      const back: string[] = dv
+        .pages(`[[${link}]]`)
         ['file']['path'].map((link) => link.replace('.md', ''))
-        .filter((childLink) => childLink !== link)
-      const newLinks: Record<string, Link> = {
-        [link]: { children: childLinks },
-      }
+        .array()
+      const forward: string[] = dv
+        .pages(`outgoing([[${link}]])`)
+        ['file']['path'].map((link) => link.replace('.md', ''))
+        .array()
 
-      for (let childLink of childLinks) {
-        const pages = dv
-          .pages(
-            type === 'backlink'
-              ? `[[${childLink}]]`
-              : `outgoing([[${childLink}]])`
-          )
-          ['file']['path'].map((link) => link.replace('.md', ''))
-          .filter((subChildLink) => subChildLink !== childLink)
-        newLinks[childLink] = { children: pages }
-      }
+      const children: Link['children'] = _.sortBy(
+        _.uniq(forward.concat(back)),
+        (link) =>
+          link.includes('/') ? link.slice(link.lastIndexOf('/' + 1)) : link
+      ).map((link) => ({
+        forward: forward.includes(link),
+        back: back.includes(link),
+        link,
+      }))
 
-      this.setLinks(type, newLinks)
+      this.setLinks({ [link]: { children, loadedChildren: false } })
     } catch (err) {
       return
     }

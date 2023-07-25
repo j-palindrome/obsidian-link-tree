@@ -24,6 +24,8 @@ export default class FoldableList extends Plugin {
       name: 'View Link Tree',
     })
 
+    this.addRibbonIcon('list-tree', 'Link Tree', () => this.activateView())
+
     await this.loadSettings()
   }
 
@@ -60,6 +62,7 @@ export default class FoldableList extends Plugin {
       type: LINK_TREE_VIEW,
       active: true,
     })
-    // this.app.workspace.revealLeaf(this.app.workspace.getRightLeaf(false))
+
+    this.app.workspace.revealLeaf(leaf)
   }
 }
